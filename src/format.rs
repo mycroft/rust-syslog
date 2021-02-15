@@ -114,13 +114,15 @@ impl<T: Display> LogFormat<(i32, StructuredData, T)> for Formatter5424 {
   fn format<W: Write>(&self, w: &mut W, severity: Severity, log_message: (i32, StructuredData, T))   -> Result<()> {
     let (message_id, data, message) = log_message;
 
-    write!(w, "<{}>{} {} {} {} {} {} {} {}",
+    let s = format!("<{}>{} {} {} {} {} {} {} {}",
       encode_priority(severity, self.facility),
       1, // version
       time::now_utc().rfc3339(),
       self.hostname.as_ref().map(|x| &x[..]).unwrap_or("localhost"),
       self.process, self.pid, message_id,
-      self.format_5424_structured_data(data), message).chain_err(|| ErrorKind::Format)
+      self.format_5424_structured_data(data), message);
+
+    write!(w, "{} {}", s.len(), s).chain_err(|| ErrorKind::Format)
   }
 }
 
